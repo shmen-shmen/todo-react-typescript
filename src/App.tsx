@@ -30,7 +30,7 @@ function App() {
 				setTodo={setTodo}
 				handleAdd={handleAdd}
 			></InputField>
-			<TodoList allTodos={allTodos} />
+			<TodoList allTodos={allTodos} setAllTodos={setAllTodos} />
 		</div>
 	);
 }
