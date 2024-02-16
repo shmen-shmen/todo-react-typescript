@@ -2,15 +2,17 @@ import React, { useEffect, useRef, useState } from "react";
 import { Todo } from "./model";
 import { AiFillDelete, AiFillEdit } from "react-icons/ai";
 import { MdDone } from "react-icons/md";
+import { Actions } from "../context/reducers";
+import { REMOVE_TODO, EDIT_TODO, TODO_DONE } from "../context/actionNames";
 import "./styles.css";
 
 interface Props {
 	todo: Todo;
-	allTodos: Todo[];
-	setAllTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
+
+	dispatch: React.Dispatch<Actions>;
 }
 
-function SingleTodo({ todo, allTodos, setAllTodos }: Props) {
+function SingleTodo({ todo, dispatch }: Props) {
 	const [editing, setEditing] = useState(false);
 	const [editTodo, setEditTodo] = useState<string>(todo.todo);
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -25,29 +27,16 @@ function SingleTodo({ todo, allTodos, setAllTodos }: Props) {
 		id: number
 	): void => {
 		e.preventDefault();
-		const newTodos = allTodos.map((todo) => {
-			if (todo.id === id) {
-				todo.todo = editTodo;
-			}
-			return todo;
-		});
-		setAllTodos(newTodos);
+		dispatch({ type: EDIT_TODO, payload: { id: id, todo: editTodo } });
 		setEditing(false);
 	};
 
 	const handleDone = (id: number): void => {
-		const newTodos = allTodos.map((todo) => {
-			if (todo.id === id) {
-				todo.isDone = !todo.isDone;
-			}
-			return todo;
-		});
-		setAllTodos(newTodos);
+		dispatch({ type: TODO_DONE, payload: id });
 	};
 
 	const handleDelete = (id: number): void => {
-		const newTodos = allTodos.filter((todo) => todo.id !== id);
-		setAllTodos(newTodos);
+		dispatch({ type: REMOVE_TODO, payload: id });
 	};
 
 	return (

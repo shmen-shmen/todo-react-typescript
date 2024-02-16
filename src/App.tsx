@@ -1,23 +1,20 @@
-import { useState } from "react";
+import { useState, useReducer } from "react";
 import "./App.css";
 import InputField from "./components/InputField";
 import { Todo } from "./components/model";
 import TodoList from "./components/TodoList";
+import { TodoReducer } from "./context/reducers";
+import { ADD_TODO } from "./context/actionNames";
 
 function App() {
 	const [todo, setTodo] = useState("");
-	const [allTodos, setAllTodos] = useState([] as Todo[]);
+	const initialState: Todo[] = [];
+	const [state, dispatch] = useReducer(TodoReducer, initialState);
 
 	const handleAdd = (e: React.FormEvent): void => {
 		e.preventDefault();
-		const newTodo: Todo = {
-			id: Date.now(),
-			todo,
-			isDone: false,
-		};
-
 		if (todo) {
-			setAllTodos([...allTodos, newTodo]);
+			dispatch({ type: ADD_TODO, payload: todo });
 			setTodo("");
 		}
 	};
@@ -30,7 +27,7 @@ function App() {
 				setTodo={setTodo}
 				handleAdd={handleAdd}
 			></InputField>
-			<TodoList allTodos={allTodos} setAllTodos={setAllTodos} />
+			<TodoList allTodos={state} dispatch={dispatch} />
 		</div>
 	);
 }
