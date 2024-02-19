@@ -3,3 +3,5 @@ export interface Todo {
 	todo: string;
 	isDone: boolean;
 }
+
+export type StateType = { todos: Todo[]; completedTodos: Todo[] };

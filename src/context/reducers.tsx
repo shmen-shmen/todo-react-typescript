@@ -1,13 +1,29 @@
-import { Todo } from "../components/model";
-import { ADD_TODO, REMOVE_TODO, EDIT_TODO, TODO_DONE } from "./actionNames";
+import { Todo, StateType } from "../components/model";
+import {
+	ADD_TODO,
+	REMOVE_TODO,
+	EDIT_TODO,
+	TODO_DONE,
+	TODO_REARRANGE,
+} from "./actionNames";
 
 export type Actions =
 	| { type: typeof ADD_TODO; payload: string }
-	| { type: typeof REMOVE_TODO; payload: number }
-	| { type: typeof EDIT_TODO; payload: { id: number; todo: string } }
-	| { type: typeof TODO_DONE; payload: number };
+	| {
+			type: typeof REMOVE_TODO;
+			payload: { id: number; group: keyof StateType };
+	  }
+	| {
+			type: typeof EDIT_TODO;
+			payload: { id: number; todo: string; group: keyof StateType };
+	  }
+	| { type: typeof TODO_DONE; payload: { id: number; isDone: boolean } }
+	| {
+			type: typeof TODO_REARRANGE;
+			payload: { id: number; group: keyof StateType };
+	  };
 
-export const TodoReducer = (state: Todo[], action: Actions): Todo[] => {
+export const TodoReducer = (state: StateType, action: Actions): StateType => {
 	switch (action.type) {
 		case ADD_TODO: {
 			const newTodo: Todo = {
@@ -15,25 +31,57 @@ export const TodoReducer = (state: Todo[], action: Actions): Todo[] => {
 				todo: action.payload,
 				isDone: false,
 			};
-			return [...state, newTodo];
+			return { ...state, todos: [...state.todos, newTodo] };
 		}
 		case REMOVE_TODO: {
-			return state.filter((todo) => todo.id !== action.payload);
+			const group = action.payload.group;
+			const filteredArr = state[group].filter(
+				(todo) => todo.id !== action.payload.id
+			);
+			return { ...state, [group]: filteredArr };
 		}
 		case EDIT_TODO: {
-			return state.map((todo) => {
-				if (todo.id === action.payload.id) {
-					todo.todo = action.payload.todo;
-				}
-				return todo;
-			});
+			const group = action.payload.group;
+			return {
+				...state,
+				[group]: state[group].map((todo) => {
+					if (todo.id === action.payload.id) {
+						todo.todo = action.payload.todo;
+					}
+					return todo;
+				}),
+			};
 		}
 		case TODO_DONE: {
-			return state.map((todo) =>
-				todo.id === action.payload ? { ...todo, isDone: !todo.isDone } : todo
-			);
-		}
+			const isDone = action.payload.isDone;
+			const id = action.payload.id;
 
+			let newTodos = state["todos"];
+			let newCompletedTodos = state["completedTodos"];
+
+			if (isDone) {
+				newTodos.push(
+					state["completedTodos"].filter((item) => item.id === id)[0]
+				);
+				newTodos = newTodos.map((item) =>
+					item.id === id ? { ...item, isDone: !item.isDone } : item
+				);
+				newCompletedTodos = newCompletedTodos.filter((item) => item.id !== id);
+			} else if (!isDone) {
+				newCompletedTodos.push(
+					state["todos"].filter((item) => item.id === id)[0]
+				);
+				newCompletedTodos = newCompletedTodos.map((item) =>
+					item.id === id ? { ...item, isDone: !item.isDone } : item
+				);
+				newTodos = newTodos.filter((item) => item.id !== id);
+			}
+			return { todos: newTodos, completedTodos: newCompletedTodos };
+		}
+		// case TODO_REARRANGE: {
+		// 	console.log(action.payload.moveto);
+		// 	return state;
+		// }
 		default:
 			return state;
 	}
