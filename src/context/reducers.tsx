@@ -20,7 +20,7 @@ export type Actions =
 	| { type: typeof TODO_DONE; payload: { id: number; isDone: boolean } }
 	| {
 			type: typeof TODO_REARRANGE;
-			payload: { id: number; group: keyof StateType };
+			payload: { dragSource: string; to: number; from: number };
 	  };
 
 export const TodoReducer = (state: StateType, action: Actions): StateType => {
@@ -78,10 +78,14 @@ export const TodoReducer = (state: StateType, action: Actions): StateType => {
 			}
 			return { todos: newTodos, completedTodos: newCompletedTodos };
 		}
-		// case TODO_REARRANGE: {
-		// 	console.log(action.payload.moveto);
-		// 	return state;
-		// }
+		case TODO_REARRANGE: {
+			const { to, from, dragSource } = action.payload;
+			const group = dragSource === "todosList" ? "todos" : "completedTodos";
+			const arrToModify = state[group];
+			const element = arrToModify.splice(from, 1)[0];
+			arrToModify.splice(to, 0, element);
+			return { ...state, [group]: arrToModify };
+		}
 		default:
 			return state;
 	}

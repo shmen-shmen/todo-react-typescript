@@ -4,7 +4,7 @@ import InputField from "./components/InputField";
 import { StateType } from "./components/model";
 import TodoList from "./components/TodoList";
 import { TodoReducer } from "./context/reducers";
-import { ADD_TODO, TODO_DONE } from "./context/actionNames";
+import { ADD_TODO, TODO_DONE, TODO_REARRANGE } from "./context/actionNames";
 import { DragDropContext, DropResult } from "react-beautiful-dnd";
 
 function App() {
@@ -14,7 +14,6 @@ function App() {
 		completedTodos: [],
 	};
 	const [state, dispatch] = useReducer(TodoReducer, initialState);
-	console.log(state);
 	const handleAdd = (e: React.FormEvent): void => {
 		e.preventDefault();
 		if (todo) {
@@ -24,19 +23,27 @@ function App() {
 	};
 
 	const onDragEnd = (result: DropResult) => {
-		console.log(result);
 		if (
 			result.destination &&
 			result.source.droppableId !== result.destination?.droppableId
 		) {
-			console.log("kotak");
-			// dispatch({
-			// 	type: TODO_DONE,
-			// 	payload: { isDone: , id: Number(result.draggableId) },
-			// });
+			dispatch({
+				type: TODO_DONE,
+				payload: {
+					isDone: result.source.droppableId !== "todosList",
+					id: Number(result.draggableId),
+				},
+			});
 		} else if (result.source.droppableId === result.destination?.droppableId) {
 			if (result.source.index !== result.destination.index) {
-				// dispatch()
+				dispatch({
+					type: TODO_REARRANGE,
+					payload: {
+						dragSource: result.source.droppableId,
+						to: result.destination.index,
+						from: result.source.index,
+					},
+				});
 			}
 		}
 	};
