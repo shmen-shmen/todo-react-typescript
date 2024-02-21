@@ -1,9 +1,9 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
 import { Todo, StateType } from "../components/model";
 import {
 	ADD_TODO,
 	REMOVE_TODO,
 	EDIT_TODO,
-	TODO_DONE,
 	TODO_REARRANGE,
 } from "./actionNames";
 
@@ -17,10 +17,14 @@ export type Actions =
 			type: typeof EDIT_TODO;
 			payload: { id: number; todo: string; group: keyof StateType };
 	  }
-	| { type: typeof TODO_DONE; payload: { id: number; isDone: boolean } }
 	| {
 			type: typeof TODO_REARRANGE;
-			payload: { dragSource: string; to: number; from: number };
+			payload: {
+				toGroup: string;
+				fromGroup: string;
+				fromIndex: number;
+				toIndex: number;
+			};
 	  };
 
 export const TodoReducer = (state: StateType, action: Actions): StateType => {
@@ -52,39 +56,24 @@ export const TodoReducer = (state: StateType, action: Actions): StateType => {
 				}),
 			};
 		}
-		case TODO_DONE: {
-			const isDone = action.payload.isDone;
-			const id = action.payload.id;
-
-			let newTodos = state["todos"];
-			let newCompletedTodos = state["completedTodos"];
-
-			if (isDone) {
-				newTodos.push(
-					state["completedTodos"].filter((item) => item.id === id)[0]
-				);
-				newTodos = newTodos.map((item) =>
-					item.id === id ? { ...item, isDone: !item.isDone } : item
-				);
-				newCompletedTodos = newCompletedTodos.filter((item) => item.id !== id);
-			} else if (!isDone) {
-				newCompletedTodos.push(
-					state["todos"].filter((item) => item.id === id)[0]
-				);
-				newCompletedTodos = newCompletedTodos.map((item) =>
-					item.id === id ? { ...item, isDone: !item.isDone } : item
-				);
-				newTodos = newTodos.filter((item) => item.id !== id);
-			}
-			return { todos: newTodos, completedTodos: newCompletedTodos };
-		}
 		case TODO_REARRANGE: {
-			const { to, from, dragSource } = action.payload;
-			const group = dragSource === "todosList" ? "todos" : "completedTodos";
-			const arrToModify = state[group];
-			const element = arrToModify.splice(from, 1)[0];
-			arrToModify.splice(to, 0, element);
-			return { ...state, [group]: arrToModify };
+			const { toGroup, fromGroup, toIndex, fromIndex } = action.payload;
+			const todosCopy = [...state.todos];
+			const completedTodosCopy = [...state.completedTodos];
+			let todo: Todo;
+
+			if (fromGroup === "todos") {
+				todo = todosCopy.splice(fromIndex, 1)[0];
+			} else {
+				todo = completedTodosCopy.splice(fromIndex, 1)[0];
+			}
+			if (toGroup === "todos") {
+				todosCopy.splice(toIndex, 0, todo);
+			} else {
+				completedTodosCopy.splice(toIndex, 0, todo);
+			}
+
+			return { todos: todosCopy, completedTodos: completedTodosCopy };
 		}
 		default:
 			return state;

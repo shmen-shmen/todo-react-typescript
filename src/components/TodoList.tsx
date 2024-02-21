@@ -13,11 +13,11 @@ interface Props {
 const TodoList: React.FC<Props> = ({ allTodos, dispatch }: Props) => {
 	return (
 		<div className="container">
-			<Droppable droppableId="todosList">
-				{(provided) => {
+			<Droppable droppableId="todos">
+				{(provided, snapshot) => {
 					return (
 						<div
-							className="todos"
+							className={`todos ${snapshot.isDraggingOver ? "dragactive" : ""}`}
 							ref={provided.innerRef}
 							{...provided.droppableProps}
 						>
@@ -37,11 +37,13 @@ const TodoList: React.FC<Props> = ({ allTodos, dispatch }: Props) => {
 					);
 				}}
 			</Droppable>
-			<Droppable droppableId="todosRemove">
-				{(provided) => {
+			<Droppable droppableId="completedTodos">
+				{(provided, snapshot) => {
 					return (
 						<div
-							className="todos remove"
+							className={`todos remove ${
+								snapshot.isDraggingOver ? "dragcomplete" : ""
+							}`}
 							ref={provided.innerRef}
 							{...provided.droppableProps}
 						>

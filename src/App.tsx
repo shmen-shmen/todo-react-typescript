@@ -4,7 +4,7 @@ import InputField from "./components/InputField";
 import { StateType } from "./components/model";
 import TodoList from "./components/TodoList";
 import { TodoReducer } from "./context/reducers";
-import { ADD_TODO, TODO_DONE, TODO_REARRANGE } from "./context/actionNames";
+import { ADD_TODO, TODO_REARRANGE } from "./context/actionNames";
 import { DragDropContext, DropResult } from "react-beautiful-dnd";
 
 function App() {
@@ -23,29 +23,24 @@ function App() {
 	};
 
 	const onDragEnd = (result: DropResult) => {
-		if (
-			result.destination &&
-			result.source.droppableId !== result.destination?.droppableId
+		const { source, destination } = result;
+		if (!destination) {
+			return;
+		} else if (
+			source.droppableId === destination?.droppableId &&
+			source.index === destination.index
 		) {
-			dispatch({
-				type: TODO_DONE,
-				payload: {
-					isDone: result.source.droppableId !== "todosList",
-					id: Number(result.draggableId),
-				},
-			});
-		} else if (result.source.droppableId === result.destination?.droppableId) {
-			if (result.source.index !== result.destination.index) {
-				dispatch({
-					type: TODO_REARRANGE,
-					payload: {
-						dragSource: result.source.droppableId,
-						to: result.destination.index,
-						from: result.source.index,
-					},
-				});
-			}
+			return;
 		}
+		dispatch({
+			type: TODO_REARRANGE,
+			payload: {
+				fromGroup: source.droppableId,
+				toGroup: destination.droppableId,
+				fromIndex: source.index,
+				toIndex: destination.index,
+			},
+		});
 	};
 
 	return (
